@@ -10,4 +10,3 @@ async def start_cmd(message: Message):
     await message.answer('Обработка /start')
 
 
-
