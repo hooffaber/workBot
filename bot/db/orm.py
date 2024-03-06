@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base, Worker
+from bot.db.models import Base, Worker
 from bot.config_reader import load_config
 
 config = load_config()
