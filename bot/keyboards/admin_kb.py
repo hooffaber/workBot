@@ -18,3 +18,11 @@ def make_admin_menu():
     builder.adjust(2)
 
     return builder.as_markup()
+
+
+def make_admin_submit():
+    builder = InlineKeyboardBuilder()
+    builder.add(
+        InlineKeyboardButton(text='Подтвердить ввод', callback_data="submit_add")
+    )
+    return builder.as_markup()

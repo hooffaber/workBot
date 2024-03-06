@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, TIMESTAMP, String, ForeignKey, Text, Float
 from sqlalchemy.orm import relationship
 
-from base import Base
+from bot.db.base import Base
 
 
 class Worker(Base):
