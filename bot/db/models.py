@@ -5,6 +5,9 @@ from bot.db.base import Base
 
 
 class Worker(Base):
+    """
+    Таблица с @username и ФИО работников
+    """
     __tablename__ = 'Worker'
 
     tg_name = Column(String, primary_key=True)
@@ -12,6 +15,9 @@ class Worker(Base):
 
 
 class WorkHours(Base):
+    """
+    Таблица с @username из Worker, началом рабочего дня (2024-03-08 15:30:00), его окончанием и адресом работы.
+    """
     __tablename__ = 'WorkHours'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -24,6 +30,9 @@ class WorkHours(Base):
 
 
 class FacilityWork(Base):
+    """
+    Таблица с названием рабочего объекта, которые обходит работник во время дня, количеством проведенных на нем (объекте) часов и описание работы на объекте.
+    """
     __tablename__ = 'FacilityWork'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -33,6 +42,9 @@ class FacilityWork(Base):
 
 
 class HoursFacility(Base):
+    """
+    Таблица для связи многие-ко-многим (Адреса и объекты)
+    """
     __tablename__ = 'HoursFacility'
 
     workHours_id = Column(Integer, ForeignKey('WorkHours.id'), primary_key=True)
