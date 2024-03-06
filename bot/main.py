@@ -1,4 +1,3 @@
-import os
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
@@ -6,6 +5,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from bot.config_reader import load_config
 
 from bot.handlers.default_commands import default_cmd_router
+from bot.handlers.admin import admin_router
 
 
 async def main():
@@ -13,11 +13,10 @@ async def main():
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     )
-
     bot = Bot(token=load_config().bot.bot_token)
     dp = Dispatcher(storage=MemoryStorage())
 
-    dp.include_routers(default_cmd_router)
+    dp.include_routers(default_cmd_router, admin_router)
 
     await dp.start_polling(bot)
 
