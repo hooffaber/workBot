@@ -101,3 +101,8 @@ async def confirm_delete(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.edit_text('Работник удалён.', reply_markup=delete_user_kb())
     await callback.answer()
+
+
+@admin_router.callback_query(F.data == 'main_admin_menu')
+async def c(callback: CallbackQuery):
+    await callback.message.edit_text("Панель управления", reply_markup=make_admin_menu())

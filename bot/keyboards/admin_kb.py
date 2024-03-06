@@ -38,6 +38,8 @@ def delete_user_kb():
     for fullname in fullnames:
         builder.button(text=fullname, callback_data=AdminDelCallbackFactory(fullname=fullname))
 
+    builder.button(text='Вернуться назад', callback_data='main_admin_menu')
+
     builder.adjust(2)
 
     return builder.as_markup()
