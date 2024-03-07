@@ -1,5 +1,5 @@
-from aiogram.types import KeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.types import KeyboardButton, InlineKeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 
 def make_worker_kb():
@@ -12,3 +12,15 @@ def make_worker_kb():
     return builder.as_markup(resize_keyboard=True)
 
 
+def make_object_kb():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='Добавить объект', callback_data='add_object'
+    )
+    builder.button(
+        text='Завершить работу', callback_data='return_geo'
+    )
+
+    builder.adjust(1)
+
+    return builder.as_markup()
