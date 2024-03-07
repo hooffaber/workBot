@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bot.cbdata import AdminMenuCallbackFactory, AdminDelCallbackFactory
 
-from bot.db.orm import get_users_fullname
+from bot.db.orm import get_users
 
 
 def make_admin_menu():
@@ -33,7 +33,7 @@ def make_admin_submit():
 def delete_user_kb():
     builder = InlineKeyboardBuilder()
 
-    fullnames = get_users_fullname()
+    fullnames = get_users()
 
     for fullname in fullnames:
         builder.button(text=fullname, callback_data=AdminDelCallbackFactory(fullname=fullname))

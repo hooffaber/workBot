@@ -22,15 +22,18 @@ def add_user(tg_name: str, fullname: str):
         session.add(new_worker)
         session.commit()
 
-    session.close()
 
 
-def get_users_fullname():
+def get_users(flag: str = 'fullname') -> List[str]:
     session = Session()
     query_result: List[Worker] = session.query(Worker).all()
 
     session.close()
-    return [worker.fullname for worker in query_result]
+    if flag == 'tg_name':
+        return [worker.tg_name for worker in query_result]
+
+    if flag == 'fullname':
+        return [worker.fullname for worker in query_result]
 
 
 def delete_worker(delete_fullname: str):
@@ -40,7 +43,4 @@ def delete_worker(delete_fullname: str):
     if user_to_delete:
         session.delete(user_to_delete)
         session.commit()
-
-    session.close()
-
 

@@ -1,2 +1,4 @@
 aiogram==3.4.1
 SQLAlchemy==2.0.28
+openai-whisper==20231117
+geopy==2.4.1

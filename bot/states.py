@@ -9,3 +9,11 @@ class AddUser(StatesGroup):
 
 class DeleteUser(StatesGroup):
     show_user_list = State()
+
+
+class WorkerStates(StatesGroup):
+    add_geo = State()
+    add_object = State()
+    add_work_hours = State()
+    add_voice_msg = State()
+
