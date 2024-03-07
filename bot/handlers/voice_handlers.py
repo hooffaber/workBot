@@ -10,7 +10,7 @@ from voice_recognition.voice import speech_recognition
 voice_router = Router()
 
 
-# Хэндлер на получение голосового и аудио сообщения
+# TODO: ОБЯЗАТЕЛЬНО добавить фильтр на состояние
 @voice_router.message(F.voice)
 async def voice_message_handler(message: Message, bot: Bot):
     """
