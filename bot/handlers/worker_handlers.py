@@ -11,6 +11,7 @@ worker_router = Router()
 
 @worker_router.callback_query(F.data == 'return_geo')
 async def start_cmd(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
     await callback.message.answer('Для того, чтобы начать работу, отправьте геолокацию',
                                   reply_markup=make_worker_kb())
 
@@ -72,6 +73,6 @@ async def submit_full(callback: CallbackQuery, state: FSMContext):
 
     voice_text = data['voice_text']
 
-    await state.clear()
-    #debug information
-    await callback.message.answer(f'{address, obj_name, hours_quantity, voice_text}')
+    # debug information
+    # await callback.message.answer(f'{address, obj_name, hours_quantity, voice_text}')
+    await callback.message.answer('Теперь вы можете добавить объект', reply_markup=make_object_kb())
