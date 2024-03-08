@@ -24,3 +24,17 @@ def make_object_kb():
     builder.adjust(1)
 
     return builder.as_markup()
+
+
+def make_submit_form_kb():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="Подтвердить ввод", callback_data='confirm_object'
+    )
+    builder.button(
+        text="Ввести заново", callback_data="return_object"
+    )
+
+    builder.adjust(1)
+
+    return builder.as_markup()
