@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from bot.db.models import Base, Worker, WorkHours
+from bot.db.models import Base, Worker, WorkHours, FacilityWork, HoursFacility
 from bot.config_reader import load_config
 
 config = load_config()
@@ -25,7 +25,6 @@ def add_user(tg_name: str, fullname: str):
 
 
 def add_work_hour(tg_name, address) -> int:
-
     session = Session()
 
     try:
@@ -35,17 +34,13 @@ def add_work_hour(tg_name, address) -> int:
         new_work_hour = WorkHours(worker=worker.tg_name, startTime=start_time, address=address)
 
         session.add(new_work_hour)
-
         session.commit()
-
-        return new_work_hour.id
 
     except Exception as e:
         session.rollback()
         print("Error occurred while adding worker's start time and address:", e)
 
-    #finally:
-        #session.close()
+    return new_work_hour.id
 
 
 def update_finish_time(work_hour_id) -> None:
@@ -67,15 +62,44 @@ def update_finish_time(work_hour_id) -> None:
         session.rollback()
         print("Error occurred while updating worker's finish time:", e)
 
-   # finally:
-    #    session.close()
+
+def add_facility(work_hour_id: int, obj_name: str, hours: int, description: str):
+    session = Session()
+
+    try:
+
+        facility = FacilityWork(objectName=obj_name, workedHours=hours, description=description)
+
+        session.add(facility)
+        session.commit()
+
+        facility_string_id = facility.id
+
+        work_facility_connection = HoursFacility(workHours_id=work_hour_id, facilityWork_id=facility_string_id)
+
+        session.add(work_facility_connection)
+
+        session.commit()
+
+    except Exception as e:
+        session.rollback()
+        print("Error occurred while adding facility:", e)
+
+
+
+
+
+    #connection_id = session.query(WorkHours).get(work_hour_id).id
+
+
+
 
 
 def get_users(flag: str = 'fullname') -> List[str]:
     session = Session()
     query_result: List[Worker] = session.query(Worker).all()
 
-    #session.close()
+    # session.close()
     if flag == 'tg_name':
         return [worker.tg_name for worker in query_result]
 
