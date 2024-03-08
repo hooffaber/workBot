@@ -1,8 +1,9 @@
 from typing import List
+from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from bot.db.models import Base, Worker
+from bot.db.models import Base, Worker, WorkHours
 from bot.config_reader import load_config
 
 config = load_config()
@@ -23,12 +24,58 @@ def add_user(tg_name: str, fullname: str):
         session.commit()
 
 
+def add_work_hour(tg_name, address) -> int:
+
+    session = Session()
+
+    try:
+        tg_name = "@" + tg_name
+        worker = session.query(Worker).filter(Worker.tg_name == tg_name).first()
+        start_time = datetime.now()
+        new_work_hour = WorkHours(worker=worker.tg_name, startTime=start_time, address=address)
+
+        session.add(new_work_hour)
+
+        session.commit()
+
+        return new_work_hour.id
+
+    except Exception as e:
+        session.rollback()
+        print("Error occurred while adding worker's start time and address:", e)
+
+    #finally:
+        #session.close()
+
+
+def update_finish_time(work_hour_id) -> None:
+    session = Session()
+
+    try:
+        work_hour_to_update = session.query(WorkHours).get(work_hour_id)
+
+        if work_hour_to_update:
+            work_hour_to_update.finishTime = datetime.now()
+
+            session.commit()
+
+        else:
+            print("No work record found for the provided WorkHours entity.")
+
+    except Exception as e:
+        # Rollback the transaction in case of any error
+        session.rollback()
+        print("Error occurred while updating worker's finish time:", e)
+
+   # finally:
+    #    session.close()
+
 
 def get_users(flag: str = 'fullname') -> List[str]:
     session = Session()
     query_result: List[Worker] = session.query(Worker).all()
 
-    session.close()
+    #session.close()
     if flag == 'tg_name':
         return [worker.tg_name for worker in query_result]
 
@@ -43,4 +90,3 @@ def delete_worker(delete_fullname: str):
     if user_to_delete:
         session.delete(user_to_delete)
         session.commit()
-

@@ -6,6 +6,9 @@ from geopy.geocoders import Nominatim
 from bot.keyboards.worker_kb import make_worker_kb, make_object_kb, make_submit_form_kb
 from bot.states import WorkerStates
 
+from bot.db.orm import add_work_hour, update_finish_time
+from bot.db.models import WorkHours
+
 worker_router = Router()
 
 
@@ -23,10 +26,15 @@ async def get_loc(message: Message, state: FSMContext):
     long = message.location.longitude
     lat = message.location.latitude
 
-    geolocator = Nominatim(user_agent="workBot")
-    location = geolocator.reverse(f'{lat}, {long}')
+    #TODO: uncomment this
+    #geolocator = Nominatim(user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0")
+    #location = geolocator.reverse(f'{lat}, {long}')
 
-    await state.update_data(address=location)
+    location = "Село Кукуево"
+
+    db_entity: WorkHours = add_work_hour(message.from_user.username, location)
+
+    await state.update_data(address=location, db_entity=db_entity)
     await state.set_state(WorkerStates.add_object)
 
     await message.answer('Теперь вы можете добавить объект', reply_markup=make_object_kb())
@@ -50,7 +58,14 @@ async def get_object(message: CallbackQuery, state: FSMContext):
 
 @worker_router.message(WorkerStates.add_work_hours)
 async def get_hours(message: CallbackQuery, state: FSMContext):
-    await state.update_data(wh_quantity=message.text)
+    try:
+        message_text : str = message.text.replace(',', '.')
+        hours_quantity = float(message_text)
+    except ValueError:
+        await message.answer("Неверно введённое количество часов. Попробуйте снова.")
+        return
+
+    await state.update_data(wh_quantity=message_text)
     data = await state.get_data()
     await message.answer(text=f'По адресу {data["address"]}\n\n'
                               f'Вы работали на объекте "{data["object_name"]}" '
@@ -72,6 +87,8 @@ async def submit_full(callback: CallbackQuery, state: FSMContext):
     address, obj_name, hours_quantity = data.get('address'), data.get('object_name'), data.get('wh_quantity')
 
     voice_text = data['voice_text']
+
+    update_finish_time(data['db_entity'])
 
     # debug information
     # await callback.message.answer(f'{address, obj_name, hours_quantity, voice_text}')
