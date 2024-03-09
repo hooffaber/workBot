@@ -7,3 +7,7 @@ class AdminMenuCallbackFactory(CallbackData, prefix='admin'):
 
 class AdminDelCallbackFactory(CallbackData, prefix='delete'):
     fullname: str
+
+
+class AdminExportFactory(CallbackData, prefix='export'):
+    date: str

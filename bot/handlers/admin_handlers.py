@@ -1,17 +1,19 @@
 from typing import List
 
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import Message, CallbackQuery, FSInputFile, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from bot.config_reader import load_config
 
 from bot.filters.admin_filter import IsAdminFilter
-from bot.keyboards.admin_kb import make_admin_menu, make_admin_submit, delete_user_kb, submit_deletion_kb
-from bot.cbdata import AdminMenuCallbackFactory, AdminDelCallbackFactory
-from bot.states import AddUser, DeleteUser
+from bot.keyboards.admin_kb import make_admin_menu, make_admin_submit, delete_user_kb, submit_deletion_kb, \
+    make_export_kb
+from bot.cbdata import AdminMenuCallbackFactory, AdminDelCallbackFactory, AdminExportFactory
+from bot.states import AddUser
 
-from bot.db.orm import add_user, delete_worker
+from bot.db.orm import add_user, delete_worker, export_query
+from bot.db.export import export_data
 
 config = load_config()
 
@@ -27,13 +29,32 @@ async def admin_menu(message: Message):
 @admin_router.callback_query(AdminMenuCallbackFactory.filter())
 async def admin_action_cmd(callback: CallbackQuery, callback_data: AdminMenuCallbackFactory, state: FSMContext):
     action = callback_data.action
-    if action == "add":
+    if action == "add_worker":
         await callback.message.edit_text("Введите @username работника", reply_markup=None)
         await state.set_state(AddUser.add_tg_username)
-    elif action == "remove":
+    elif action == "remove_worker":
         await callback.message.edit_text('Выберите работника для удаления', reply_markup=delete_user_kb())
-    else:
-        pass
+    elif action == 'export_data':
+        await callback.message.edit_text('Выберите формат отчёта', reply_markup=make_export_kb())
+
+    await callback.answer()
+
+
+@admin_router.callback_query(AdminExportFactory.filter())
+async def get_export(callback: CallbackQuery, callback_data: AdminExportFactory):
+    data = export_query(callback_data.date)
+    export_filename = export_data(query_data=data, export_time=callback_data.date)
+
+    excel_file = FSInputFile(export_filename)
+
+    await callback.message.answer_document(excel_file)
+
+    await callback.message.delete()
+
+
+    admin_kb = [[KeyboardButton(text = '/admin')]]
+
+    await callback.message.answer(text='Для возврата панели нажмите на кнопку', reply_markup=ReplyKeyboardMarkup(keyboard=admin_kb, resize_keyboard=True))
 
     await callback.answer()
 
