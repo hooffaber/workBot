@@ -63,7 +63,7 @@ async def add_object(callback: CallbackQuery, state: FSMContext):
 @worker_router.message(F.text, WorkerStates.add_object)
 async def get_object(message: CallbackQuery, state: FSMContext):
     await state.update_data(object_name=message.text)
-    await message.answer(f'Объект "{message.text}" добавлен.\nСколько часов вы проработали?')
+    await message.answer(f'Объект "{message.text}" добавлен.\nСколько часов вы проработали? Пример: 2.4')
 
     await state.set_state(WorkerStates.add_work_hours)
 

@@ -6,5 +6,3 @@ def speech_recognition(audio_fname: str, model='base'):
     result = speech_model.transcribe(f'{audio_fname}')
 
     return result['text']
-
-

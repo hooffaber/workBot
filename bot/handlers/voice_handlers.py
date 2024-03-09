@@ -10,6 +10,11 @@ from voice_recognition.voice import speech_recognition
 
 from bot.states import WorkerStates
 
+from bot.config_reader import load_config
+
+config = load_config()
+model_mode = config.bot.model_mode
+
 voice_router = Router()
 
 
@@ -37,7 +42,7 @@ async def voice_message_handler(message: Message, bot: Bot, state: FSMContext):
 
     await bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
 
-    text = speech_recognition(file_on_disk)
+    text = speech_recognition(file_on_disk, model=model_mode)
 
     await state.get_data()
     await state.update_data(voice_text=text)
@@ -48,5 +53,3 @@ async def voice_message_handler(message: Message, bot: Bot, state: FSMContext):
     await message.answer(text, reply_markup=make_voice_to_text_kb())
 
     os.remove(file_on_disk)  # Удаление временного файла
-
-

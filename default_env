@@ -3,3 +3,5 @@ BOT_TOKEN=1244214124:AAG-JDsjfdwefuvwjeveWNEJFEWFJewf
 ADMINS=1234567891,2351554413
 #db
 DB_NAME=dbname
+#model mode - one of: tiny, base, small, medium, large
+MODEL_MODE=medium
