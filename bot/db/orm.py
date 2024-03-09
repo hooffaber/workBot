@@ -1,13 +1,17 @@
-from typing import List
+from typing import List, Any
 from datetime import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+import pandas as pd
+
 from bot.db.models import Base, Worker, WorkHours, FacilityWork, HoursFacility
 from bot.config_reader import load_config
 
 config = load_config()
 db_name = config.db.db_name
+
 
 db_url = f'sqlite:///{db_name}.db'
 engine = create_engine(db_url)
@@ -31,7 +35,7 @@ def add_work_hour(tg_name, address) -> int:
         tg_name = "@" + tg_name
         worker = session.query(Worker).filter(Worker.tg_name == tg_name).first()
         start_time = datetime.now()
-        new_work_hour = WorkHours(worker=worker.tg_name, startTime=start_time, address=address)
+        new_work_hour = WorkHours(worker=worker.tg_name, startTime=start_time, address=str(address))
 
         session.add(new_work_hour)
         session.commit()
@@ -85,14 +89,7 @@ def add_facility(work_hour_id: int, obj_name: str, hours: int, description: str)
         session.rollback()
         print("Error occurred while adding facility:", e)
 
-
-
-
-
-    #connection_id = session.query(WorkHours).get(work_hour_id).id
-
-
-
+    # connection_id = session.query(WorkHours).get(work_hour_id).id
 
 
 def get_users(flag: str = 'fullname') -> List[str]:
@@ -114,3 +111,29 @@ def delete_worker(delete_fullname: str):
     if user_to_delete:
         session.delete(user_to_delete)
         session.commit()
+
+
+def export_query(export_time: str) -> Any:
+    session = Session()
+    try:
+        if export_time == 'day':
+            start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        elif export_time == 'month':
+            start_date = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        else:
+            print("Invalid export time specified.")
+            return
+
+        query_data = session.query(WorkHours, Worker.fullname, FacilityWork.objectName, FacilityWork.workedHours, \
+                                        FacilityWork.description).join(Worker, WorkHours.worker == Worker.tg_name).\
+            join(HoursFacility, WorkHours.id == HoursFacility.workHours_id).\
+            join(FacilityWork, HoursFacility.facilityWork_id == FacilityWork.id).filter().all()
+
+    except Exception as e:
+        print("Error occurred while export query:", e)
+
+    return query_data
+
+
+
+

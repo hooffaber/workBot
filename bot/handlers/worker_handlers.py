@@ -11,8 +11,9 @@ from bot.db.orm import add_work_hour, update_finish_time, add_facility
 worker_router = Router()
 
 
-@worker_router.callback_query(F.data == 'return_geo')
+@worker_router.callback_query(F.data == 'return_geo', WorkerStates.wait_next_obj)
 async def start_cmd(callback: CallbackQuery, state: FSMContext):
+
     data = await state.get_data()
     update_finish_time(data['db_entity_id'])
 
@@ -25,16 +26,19 @@ async def start_cmd(callback: CallbackQuery, state: FSMContext):
 
 @worker_router.message(F.location, WorkerStates.add_geo)
 async def get_loc(message: Message, state: FSMContext):
+
+    await message.reply("Отлично. Идёт обработка гео.", reply_markup=ReplyKeyboardRemove())
+
     long = message.location.longitude
     lat = message.location.latitude
 
     # TODO: uncomment this
-    # geolocator = Nominatim(user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0")
-    # location = geolocator.reverse(f'{lat}, {long}')
+    geolocator = Nominatim(user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0")
+    location = geolocator.reverse(f'{lat}, {long}')
 
-    location = "Село Кукуево"
+    #location = "Село Кукуево"
 
-    db_entity_id: int = add_work_hour(message.from_user.username, location)
+    db_entity_id: int = add_work_hour(tg_name=message.from_user.username, address=location)
 
     await state.update_data(address=location)
     await state.update_data(db_entity_id=db_entity_id)
@@ -46,9 +50,13 @@ async def get_loc(message: Message, state: FSMContext):
 
 @worker_router.callback_query(F.data.in_(['add_object', 'return_object']))
 async def add_object(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Введите название объекта:', reply_markup=None)
 
-    await state.set_state(WorkerStates.add_object)
+    curr_state = await state.get_state()
+    if curr_state in [WorkerStates.add_work_hours, WorkerStates.add_object, WorkerStates.wait_next_obj]:
+        await callback.message.edit_text('Введите название объекта:', reply_markup=None)
+        await state.set_state(WorkerStates.add_object)
+    else:
+        return
     await callback.answer()
 
 
@@ -71,6 +79,8 @@ async def get_hours(message: CallbackQuery, state: FSMContext):
 
     await state.update_data(wh_quantity=message_text)
     data = await state.get_data()
+
+
     await message.answer(text=f'По адресу {data["address"]}\n\n'
                               f'Вы работали на объекте "{data["object_name"]}" '
                               f'в течение {data["wh_quantity"]} часа(часов). '
@@ -96,4 +106,7 @@ async def submit_full(callback: CallbackQuery, state: FSMContext):
 
     # debug information
     # await callback.message.answer(f'{address, obj_name, hours_quantity, voice_text}')
+    await state.set_state(WorkerStates.wait_next_obj)
     await callback.message.answer('Теперь вы можете добавить объект', reply_markup=make_object_kb())
+
+

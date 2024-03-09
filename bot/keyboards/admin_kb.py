@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from bot.cbdata import AdminMenuCallbackFactory, AdminDelCallbackFactory
+from bot.cbdata import AdminMenuCallbackFactory, AdminDelCallbackFactory, AdminExportFactory
 
 from bot.db.orm import get_users
 
@@ -8,13 +8,13 @@ from bot.db.orm import get_users
 def make_admin_menu():
     builder = InlineKeyboardBuilder()
     builder.button(
-        text='Добавить сотрудника', callback_data=AdminMenuCallbackFactory(action='add')
+        text='Добавить сотрудника', callback_data=AdminMenuCallbackFactory(action='add_worker')
     )
     builder.button(
-        text='Удалить сотрудника', callback_data=AdminMenuCallbackFactory(action='remove')
+        text='Удалить сотрудника', callback_data=AdminMenuCallbackFactory(action='remove_worker')
     )
     builder.button(
-        text='Выгрузить отчёт', callback_data=AdminMenuCallbackFactory(action='export')
+        text='Выгрузить отчёт', callback_data=AdminMenuCallbackFactory(action='export_data')
     )
 
     builder.adjust(2)
@@ -51,5 +51,13 @@ def submit_deletion_kb():
     builder.button(text='Вернуться назад', callback_data=AdminMenuCallbackFactory(action='remove'))
 
     builder.adjust(1)
+
+    return builder.as_markup()
+
+
+def make_export_kb():
+    builder = InlineKeyboardBuilder()
+    builder.button(text='За день', callback_data=AdminExportFactory(date="day"))
+    builder.button(text='За месяц', callback_data=AdminExportFactory(date="month"))
 
     return builder.as_markup()
