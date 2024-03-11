@@ -21,10 +21,10 @@ class Config:
 
 
 def load_config():
-    bot_token = os.getenv('BOT_TOKEN')
-    admins = os.getenv('ADMINS').split(',')
-    db_name = os.getenv('DB_NAME')
-    model_voice = os.getenv('MODEL_MODE')
+    bot_token = os.environ.get('BOT_TOKEN')
+    admins = os.environ.get('ADMINS').split(',')
+    db_name = os.environ.get('DB_NAME')
+    model_voice = os.environ.get('MODEL_MODE')
 
     return Config(bot=TgBot(bot_token=bot_token, admins=admins, model_mode=model_voice),
                   db=DB(db_name=db_name))
