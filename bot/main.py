@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.getcwd()))
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from bot.config_reader import load_config
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 from bot.handlers.default_commands import default_cmd_router
 from bot.handlers.admin_handlers import admin_router
@@ -14,8 +14,7 @@ from bot.handlers.voice_handlers import voice_router
 from bot.handlers.worker_handlers import worker_router
 
 
-dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-load_dotenv(dotenv_path)  # take environment variables from .env.
+load_dotenv(find_dotenv())  # take environment variables from .env.
 
 
 
