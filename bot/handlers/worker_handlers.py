@@ -36,21 +36,21 @@ async def get_loc(message: Message, state: FSMContext):
     geolocator = Nominatim(user_agent="Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0")
     location = geolocator.reverse(f'{lat}, {long}')
 
-    #location = "Село Кукуево"
+    db_entity_id = add_work_hour(tg_name=message.from_user.username, address=location)
 
-    db_entity_id: int = add_work_hour(tg_name=message.from_user.username, address=location)
-
-    await state.update_data(address=location)
-    await state.update_data(db_entity_id=db_entity_id)
-
+    await state.update_data(db_entity_id=db_entity_id, address=location)
     await state.set_state(WorkerStates.add_object)
-
     await message.answer('Теперь вы можете добавить объект', reply_markup=make_object_kb())
 
 
 @worker_router.callback_query(F.data.in_(['add_object', 'return_object']))
 async def add_object(callback: CallbackQuery, state: FSMContext):
-
+    """
+    Чё эта функция делает ?!
+    :param callback:
+    :param state:
+    :return:
+    """
     curr_state = await state.get_state()
     if curr_state in [WorkerStates.add_work_hours, WorkerStates.add_object, WorkerStates.wait_next_obj]:
         await callback.message.edit_text('Введите название объекта:', reply_markup=None)
@@ -79,8 +79,6 @@ async def get_hours(message: CallbackQuery, state: FSMContext):
 
     await state.update_data(wh_quantity=message_text)
     data = await state.get_data()
-
-
     await message.answer(text=f'По адресу {data["address"]}\n\n'
                               f'Вы работали на объекте "{data["object_name"]}" '
                               f'в течение {data["wh_quantity"]} часа(часов). '
@@ -91,7 +89,6 @@ async def get_hours(message: CallbackQuery, state: FSMContext):
 @worker_router.callback_query(F.data.in_(['confirm_object', 'reset_voice']))
 async def confirm_obj(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text("Отправьте голосовое сообщение с кратким описанием работы:", reply_markup=None)
-
     await state.set_state(WorkerStates.add_voice_msg)
 
 
@@ -99,13 +96,8 @@ async def confirm_obj(callback: CallbackQuery, state: FSMContext):
 async def submit_full(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     address, obj_name, hours_quantity = data.get('address'), data.get('object_name'), data.get('wh_quantity')
-
     voice_text = data['voice_text']
-
     add_facility(work_hour_id=data['db_entity_id'], obj_name=obj_name, hours=hours_quantity, description=voice_text)
-
-    # debug information
-    # await callback.message.answer(f'{address, obj_name, hours_quantity, voice_text}')
     await state.set_state(WorkerStates.wait_next_obj)
     await callback.message.answer('Теперь вы можете добавить объект', reply_markup=make_object_kb())
 

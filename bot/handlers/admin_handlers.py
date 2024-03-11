@@ -44,19 +44,13 @@ async def admin_action_cmd(callback: CallbackQuery, callback_data: AdminMenuCall
 async def get_export(callback: CallbackQuery, callback_data: AdminExportFactory):
     data = export_query(callback_data.date)
     export_filename = export_data(query_data=data, export_time=callback_data.date)
-
     excel_file = FSInputFile(export_filename)
-
     await callback.message.answer_document(excel_file)
-
     await callback.message.delete()
 
-
-    admin_kb = [[KeyboardButton(text = '/admin')]]
-
+    # TODO: replace into keyboards
+    admin_kb = [[KeyboardButton(text='/admin')]]
     await callback.message.answer(text='Для возврата панели нажмите на кнопку', reply_markup=ReplyKeyboardMarkup(keyboard=admin_kb, resize_keyboard=True))
-
-    await callback.answer()
 
 
 @admin_router.message(AddUser.add_tg_username)
@@ -124,6 +118,7 @@ async def confirm_delete(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
+# TODO: rename foo
 @admin_router.callback_query(F.data == 'main_admin_menu')
 async def c(callback: CallbackQuery):
     await callback.message.edit_text("Панель управления", reply_markup=make_admin_menu())

@@ -1,12 +1,11 @@
 import os
-from typing import List
 from dataclasses import dataclass
 
 
 @dataclass
 class TgBot:
     bot_token: str
-    admins: List[str]
+    admins: list[str]
     model_mode: str
 
 

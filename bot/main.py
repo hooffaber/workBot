@@ -9,6 +9,7 @@ from bot.handlers.admin_handlers import admin_router
 from bot.handlers.voice_handlers import voice_router
 from bot.handlers.worker_handlers import worker_router
 
+
 async def main():
     logging.basicConfig(
         level=logging.INFO,
@@ -22,4 +23,5 @@ async def main():
     await dp.start_polling(bot)
 
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())

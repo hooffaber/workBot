@@ -1,7 +1,7 @@
 import whisper
 
 
-def speech_recognition(audio_fname: str, model='base'):
+def speech_recognition(audio_fname: str, model: str = 'base') -> str:
     speech_model = whisper.load_model(model)
     result = speech_model.transcribe(f'{audio_fname}')
 
