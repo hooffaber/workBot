@@ -14,7 +14,8 @@ from bot.handlers.voice_handlers import voice_router
 from bot.handlers.worker_handlers import worker_router
 
 
-load_dotenv()  # take environment variables from .env.
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)  # take environment variables from .env.
 
 
 
