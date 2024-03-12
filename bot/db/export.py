@@ -15,7 +15,7 @@ def export_data(query_data: Any, export_time: str):
         finish_address = work_hour.finish_address
 
         export_data_list.append(
-            [fullname, start_time, finish_time, address, finish_address, f"{obj_name} - {worked_hours}, - {description}"])
+            [fullname, start_time, finish_time, address, finish_address, f"{obj_name} {worked_hours}ч - {description}"])
 
     df = pd.DataFrame(export_data_list, columns=['ФИО', 'Начало работы', 'Конец работы',
                                                  'Адрес в начале', 'Адрес в конце', 'Работы'])
