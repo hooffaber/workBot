@@ -12,6 +12,7 @@ def export_data(query_data: Any, export_time: str):
         start_time = work_hour.startTime.strftime("%Y-%m-%d %H:%M:%S")
         finish_time = work_hour.finishTime.strftime("%Y-%m-%d %H:%M:%S") if work_hour.finishTime else ""
         address = work_hour.address
+        finish_address = work_hour.finish_address
 
         export_data_list.append(
             [fullname, start_time, finish_time, address, finish_address, f"{obj_name} - {worked_hours}, - {description}"])
