@@ -12,7 +12,6 @@ from bot.config_reader import load_config
 config = load_config()
 db_name = config.db.db_name
 
-
 db_url = f'sqlite:///{db_name}.db'
 engine = create_engine(db_url)
 Base.metadata.create_all(engine)
@@ -35,7 +34,7 @@ def add_work_hour(tg_name, address) -> int:
         tg_name = "@" + tg_name
         worker = session.query(Worker).filter(Worker.tg_name == tg_name).first()
         start_time = datetime.now()
-        new_work_hour = WorkHours(worker=worker.tg_name, startTime=start_time, address=str(address))
+        new_work_hour = WorkHours(worker=worker.tg_name, startTime=start_time, address=address)
 
         session.add(new_work_hour)
         session.commit()
@@ -48,23 +47,41 @@ def add_work_hour(tg_name, address) -> int:
 
 
 def update_finish_time(work_hour_id) -> None:
-    session = Session()
 
     try:
-        work_hour_to_update = session.query(WorkHours).get(work_hour_id)
+        with Session() as session:
+            work_hour_to_update = session.query(WorkHours).get(work_hour_id)
 
-        if work_hour_to_update:
-            work_hour_to_update.finishTime = datetime.now()
+            if work_hour_to_update:
+                work_hour_to_update.finishTime = datetime.now()
 
-            session.commit()
+                session.commit()
 
-        else:
-            print("No work record found for the provided WorkHours entity.")
+            else:
+                print("No work record found for the provided WorkHours entity.")
+
+    except Exception as e:
+        print("Error occurred while updating worker's finish time:", e)
+
+
+def update_finish_address(work_hour_id, address: str) -> None:
+
+    try:
+        with Session() as session:
+            work_hour_to_update = session.query(WorkHours).get(work_hour_id)
+
+            if work_hour_to_update:
+                work_hour_to_update.finish_address = address
+
+                session.commit()
+
+            else:
+                print("No work record found for the provided WorkHours entity to update finish address.")
 
     except Exception as e:
         # Rollback the transaction in case of any error
         session.rollback()
-        print("Error occurred while updating worker's finish time:", e)
+        print("Error occurred while updating worker's finish address:", e)
 
 
 def add_facility(work_hour_id: int, obj_name: str, hours: int, description: str):
@@ -125,15 +142,11 @@ def export_query(export_time: str) -> Any:
             return
 
         query_data = session.query(WorkHours, Worker.fullname, FacilityWork.objectName, FacilityWork.workedHours, \
-                                        FacilityWork.description).join(Worker, WorkHours.worker == Worker.tg_name).\
-            join(HoursFacility, WorkHours.id == HoursFacility.workHours_id).\
+                                   FacilityWork.description).join(Worker, WorkHours.worker == Worker.tg_name). \
+            join(HoursFacility, WorkHours.id == HoursFacility.workHours_id). \
             join(FacilityWork, HoursFacility.facilityWork_id == FacilityWork.id).filter().all()
 
     except Exception as e:
         print("Error occurred while export query:", e)
 
     return query_data
-
-
-
-
