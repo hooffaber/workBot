@@ -1,12 +1,12 @@
 import os
 from datetime import datetime
-from typing import Iterable, Optional
+from typing import Any
 import pandas as pd
 
 DATA_FOLDER = 'data/export/'
 
 
-def export_data(query_data: Iterable, export_time: str) -> Optional[str]:
+def export_data(query_data: Any, export_time: str):
     export_data_list = []
     for work_hour, fullname, obj_name, worked_hours, description in query_data:
         start_time = work_hour.startTime.strftime("%Y-%m-%d %H:%M:%S")
@@ -14,10 +14,9 @@ def export_data(query_data: Iterable, export_time: str) -> Optional[str]:
         address = work_hour.address
 
         export_data_list.append(
-            [fullname, start_time, finish_time, address, f"{obj_name} - {worked_hours}, - {description}"])
+            [fullname, start_time, finish_time, address, finish_address, f"{obj_name} - {worked_hours}, - {description}"])
 
-    df = pd.DataFrame(export_data_list, columns=['ФИО', 'Время начала работы', 'Время конца работы',
-                                                 'Адресс', 'Данные по обьектам'])
+    df = pd.DataFrame(export_data_list, columns=['Fullname', 'StartTime', 'FinishTime', 'Address', 'FacilityData'])
 
     file_name = f"exported_data_{export_time}_{datetime.now().strftime('%d_%m_%H%M%S')}.xlsx"
 
@@ -26,6 +25,8 @@ def export_data(query_data: Iterable, export_time: str) -> Optional[str]:
         df.to_excel(filepath, index=True)
         print(f"Data exported successfully to {file_name}")
         return filepath
+
+    return None
 
 
 def check_folders(path: str):

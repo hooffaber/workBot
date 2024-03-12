@@ -25,6 +25,7 @@ class WorkHours(Base):
     startTime = Column(TIMESTAMP, nullable=False)
     finishTime = Column(TIMESTAMP)
     address = Column(Text, nullable=False)
+    finish_address = Column(Text)
 
     worker_ref = relationship("Worker", backref="workhours")
 

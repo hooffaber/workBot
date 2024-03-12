@@ -16,5 +16,10 @@ class WorkerStates(StatesGroup):
     add_object = State()
     add_work_hours = State()
     add_voice_msg = State()
+
+    write_msg_byhands = State()
+
     wait_next_obj = State()
+
+    finish_job = State()
 
