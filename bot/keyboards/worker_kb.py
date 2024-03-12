@@ -23,7 +23,7 @@ def make_object_kb():
 
     builder.adjust(1)
 
-    return builder.as_markup()
+    return builder.as_markup(resize_keyboard=True)
 
 
 def make_submit_form_kb():
@@ -38,3 +38,12 @@ def make_submit_form_kb():
     builder.adjust(1)
 
     return builder.as_markup()
+
+
+def make_start_kb():
+    builder = ReplyKeyboardBuilder()
+    builder.button(
+        text="/start"
+    )
+
+    return builder.as_markup(resize_keyboard=True)

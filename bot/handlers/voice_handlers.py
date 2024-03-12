@@ -3,7 +3,7 @@ import os.path
 from aiogram import Router, Bot, F
 from aiogram.fsm.context import FSMContext
 from aiogram.enums.chat_action import ChatAction
-from aiogram.types import ContentType, Message
+from aiogram.types import ContentType, Message, CallbackQuery
 
 from bot.keyboards.voice_kb import make_voice_to_text_kb
 from voice_recognition.voice import speech_recognition
@@ -53,3 +53,19 @@ async def voice_message_handler(message: Message, bot: Bot, state: FSMContext):
     await message.answer(text, reply_markup=make_voice_to_text_kb())
 
     os.remove(file_on_disk)  # Удаление временного файла
+
+
+@voice_router.callback_query(F.data == 'text_byhands', WorkerStates.add_voice_msg)
+async def write_msg_byhands(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Введите сообщение с клавиатуры:")
+
+    await state.set_state(WorkerStates.write_msg_byhands)
+    await callback.answer()
+
+
+@voice_router.message(WorkerStates.write_msg_byhands)
+async def catch_written_msg(message: Message, state: FSMContext):
+    await state.set_state(WorkerStates.add_voice_msg)
+    await state.update_data(voice_text=message.text)
+
+    await message.answer(message.text, reply_markup=make_voice_to_text_kb())
