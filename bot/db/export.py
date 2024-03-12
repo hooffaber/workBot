@@ -18,7 +18,7 @@ def export_data(query_data: Any, export_time: str):
             [fullname, start_time, finish_time, address, finish_address, f"{obj_name} - {worked_hours}, - {description}"])
 
     df = pd.DataFrame(export_data_list, columns=['ФИО', 'Начало работы', 'Конец работы',
-                                                 'Адрес в начале' 'Адрес в конце', 'Работы'])
+                                                 'Адрес в начале', 'Адрес в конце', 'Работы'])
 
     file_name = f"exported_data_{export_time}_{datetime.now().strftime('%d_%m_%H%M%S')}.xlsx"
 
