@@ -11,6 +11,15 @@ class DeleteUser(StatesGroup):
     show_user_list = State()
 
 
+class AddObject(StatesGroup):
+    add_object_name = State()
+    confirm_data = State()
+
+
+class DeleteObject(StatesGroup):
+    show_object_list = State()
+
+
 class WorkerStates(StatesGroup):
     add_geo = State()
     add_object = State()
@@ -22,4 +31,3 @@ class WorkerStates(StatesGroup):
     wait_next_obj = State()
 
     finish_job = State()
-

@@ -7,12 +7,12 @@ from aiogram.fsm.context import FSMContext
 from bot.config_reader import load_config
 
 from bot.filters.admin_filter import IsAdminFilter
-from bot.keyboards.admin_kb import make_admin_menu, make_admin_submit, delete_user_kb, submit_deletion_kb, \
-    make_export_kb
+from bot.keyboards.admin_kb import make_admin_menu, make_admin_submit_user, delete_user_kb, submit_deletion_kb, \
+    make_export_kb, make_admin_submit_obj, delete_obj_kb
 from bot.cbdata import AdminMenuCallbackFactory, AdminDelCallbackFactory, AdminExportFactory
-from bot.states import AddUser
+from bot.states import AddUser, AddObject, DeleteObject, DeleteUser
 
-from bot.db.orm import add_user, delete_worker, export_query
+from bot.db.orm import add_user, delete_worker, export_query, add_object, delete_object
 from bot.db.export import export_data
 
 config = load_config()
@@ -29,11 +29,22 @@ async def admin_menu(message: Message):
 @admin_router.callback_query(AdminMenuCallbackFactory.filter())
 async def admin_action_cmd(callback: CallbackQuery, callback_data: AdminMenuCallbackFactory, state: FSMContext):
     action = callback_data.action
-    if action == "add_worker":
+    subject = callback_data.subject
+
+    if action == 'add' and subject == 'worker':
         await callback.message.edit_text("Введите @username работника", reply_markup=None)
         await state.set_state(AddUser.add_tg_username)
-    elif action == "remove_worker":
+
+    elif action == 'remove' and subject == 'worker':
         await callback.message.edit_text('Выберите работника для удаления', reply_markup=delete_user_kb())
+
+    elif action == 'add' and subject == 'object':
+        await callback.message.edit_text("Введите название объекта для добавления", reply_markup=None)
+        await state.set_state(AddObject.add_object_name)
+
+    elif action == 'remove' and subject == 'object':
+        await callback.message.edit_text('Выберите объект для удаления', reply_markup=delete_obj_kb())
+
     elif action == 'export_data':
         await callback.message.edit_text('Выберите формат отчёта', reply_markup=make_export_kb())
 
@@ -51,10 +62,10 @@ async def get_export(callback: CallbackQuery, callback_data: AdminExportFactory)
 
     await callback.message.delete()
 
+    admin_kb = [[KeyboardButton(text='/admin')]]
 
-    admin_kb = [[KeyboardButton(text = '/admin')]]
-
-    await callback.message.answer(text='Для возврата панели нажмите на кнопку', reply_markup=ReplyKeyboardMarkup(keyboard=admin_kb, resize_keyboard=True))
+    await callback.message.answer(text='Для возврата панели нажмите на кнопку',
+                                  reply_markup=ReplyKeyboardMarkup(keyboard=admin_kb, resize_keyboard=True))
 
     await callback.answer()
 
@@ -89,10 +100,10 @@ async def input_fullname(message: Message, state: FSMContext):
     await state.update_data(fullname=message.text)
     await message.answer(
         f'Логин работника {tg_name}\nФИО работника: {message.text}\n\nЕсли ошиблись в написании ФИО, отправьте его ещё раз.',
-        reply_markup=make_admin_submit())
+        reply_markup=make_admin_submit_user())
 
 
-@admin_router.callback_query(F.data == 'submit_add')
+@admin_router.callback_query(F.data == 'submit_add_user')
 async def submit_user_add(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         text='Вы добавили юзера', reply_markup=None
@@ -106,21 +117,56 @@ async def submit_user_add(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer("Панель управления", reply_markup=make_admin_menu())
 
 
+@admin_router.message(AddObject.add_object_name)
+async def input_fullname(message: Message, state: FSMContext):
+    await state.update_data(obj_name=message.text)
+    await message.answer(
+        f'Название объекта: {message.text}\n\nЕсли ошиблись в написании названия, отправьте его ещё раз.',
+        reply_markup=make_admin_submit_obj())
+
+
+@admin_router.callback_query(F.data == 'submit_add_obj')
+async def submit_user_add(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        text='Вы добавили объект.', reply_markup=None
+    )
+
+    data = await state.get_data()
+    obj_name = data['obj_name']
+    print(obj_name)
+    add_object(obj_name=obj_name)
+
+    await state.clear()
+    await callback.message.answer("Панель управления", reply_markup=make_admin_menu())
+
+
 @admin_router.callback_query(AdminDelCallbackFactory.filter())
 async def del_user_click(callback: CallbackQuery, callback_data: AdminDelCallbackFactory, state: FSMContext):
-    await state.update_data(delete_fullname=callback_data.fullname)
+    subject = callback_data.subject
+    await state.update_data(subject=subject)
 
-    await callback.message.edit_text(f"Вы точно хотите удалить {callback_data.fullname}?",
-                                     reply_markup=submit_deletion_kb())
+    if subject == 'worker':
+        await state.update_data(delete_fullname=callback_data.name)
+
+    else:
+        await state.update_data(delete_obj_name=callback_data.name)
+
+    await callback.message.edit_text(f"Вы точно хотите удалить {callback_data.name}?",
+                                     reply_markup=submit_deletion_kb(callback_data.subject))
 
 
 @admin_router.callback_query(F.data == 'submit_delete')
 async def confirm_delete(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    delete_fullname = data['delete_fullname']
-    delete_worker(delete_fullname)
-
-    await callback.message.edit_text('Работник удалён.', reply_markup=delete_user_kb())
+    if data['subject'] == 'worker':
+        delete_fullname = data['delete_fullname']
+        delete_worker(delete_fullname)
+        await callback.message.edit_text('Работник удалён.', reply_markup=delete_user_kb())
+    else:
+        delete_obj_name = data['delete_obj_name']
+        delete_object(delete_obj_name)
+        await callback.message.edit_text('Объект удалён.', reply_markup=delete_user_kb())
+    await state.clear()
     await callback.answer()
 
 

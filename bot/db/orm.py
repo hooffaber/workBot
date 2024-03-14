@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 import pandas as pd
 
-from bot.db.models import Base, Worker, WorkHours, FacilityWork, HoursFacility
+from bot.db.models import Base, Worker, WorkHours, FacilityWork, HoursFacility, AdminObject
 from bot.config_reader import load_config
 
 config = load_config()
@@ -24,6 +24,15 @@ def add_user(tg_name: str, fullname: str):
     if not user:
         new_worker = Worker(tg_name=tg_name, fullname=fullname)
         session.add(new_worker)
+        session.commit()
+
+
+def add_object(obj_name: str):
+    session = Session()
+    obj = session.query(AdminObject).filter(AdminObject.name == obj_name).first()
+    if not obj:
+        new_object = AdminObject(name=obj_name)
+        session.add(new_object)
         session.commit()
 
 
@@ -121,12 +130,27 @@ def get_users(flag: str = 'fullname') -> List[str]:
         return [worker.fullname for worker in query_result]
 
 
+def get_objects() -> List[str]:
+    session = Session()
+    query_result: List[AdminObject] = session.query(AdminObject).all()
+    return [obj.name for obj in query_result]
+
+
 def delete_worker(delete_fullname: str):
     session = Session()
     user_to_delete = session.query(Worker).filter(Worker.fullname == delete_fullname).first()
 
     if user_to_delete:
         session.delete(user_to_delete)
+        session.commit()
+
+
+def delete_object(obj_name: str):
+    session = Session()
+    obj_to_delete = session.query(AdminObject).filter(AdminObject.name == obj_name).first()
+
+    if obj_to_delete:
+        session.delete(obj_to_delete)
         session.commit()
 
 

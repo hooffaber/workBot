@@ -3,10 +3,12 @@ from aiogram.filters.callback_data import CallbackData
 
 class AdminMenuCallbackFactory(CallbackData, prefix='admin'):
     action: str
+    subject: str
 
 
 class AdminDelCallbackFactory(CallbackData, prefix='delete'):
-    fullname: str
+    name: str
+    subject: str
 
 
 class AdminExportFactory(CallbackData, prefix='export'):
