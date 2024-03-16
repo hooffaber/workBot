@@ -4,11 +4,12 @@ from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 
 from bot.location import get_location
 
-from bot.keyboards.worker_kb import make_worker_kb, make_object_kb, make_submit_form_kb, make_start_kb
+from bot.keyboards.worker_kb import make_worker_kb, make_object_kb, make_submit_form_kb, make_start_kb, choose_obj_kb
 from bot.keyboards.voice_kb import instead_voice_kb
 from bot.states import WorkerStates
 
-from bot.db.orm import add_work_hour, update_finish_time, add_facility, update_finish_address
+from bot.db.orm import add_work_hour, update_finish_time, add_facility, update_finish_address, get_obj_by_id
+from bot.cbdata import WorkerPickingCallbackFactory
 
 worker_router = Router()
 
@@ -56,21 +57,22 @@ async def get_loc(message: Message, state: FSMContext):
     await message.answer('Теперь вы можете добавить объект', reply_markup=make_object_kb())
 
 
-@worker_router.callback_query(F.data.in_(['add_object', 'return_object']))
+@worker_router.callback_query(F.data.in_(['add_object', 'return_object', 'refresh_objects']))
 async def add_object(callback: CallbackQuery, state: FSMContext):
     curr_state = await state.get_state()
     if curr_state in [WorkerStates.add_work_hours, WorkerStates.add_object, WorkerStates.wait_next_obj]:
-        await callback.message.edit_text('Введите название объекта:', reply_markup=None)
+        await callback.message.edit_text('Выберите объект:', reply_markup=choose_obj_kb())
         await state.set_state(WorkerStates.add_object)
     else:
         return
     await callback.answer()
 
 
-@worker_router.message(F.text, WorkerStates.add_object)
-async def get_object(message: CallbackQuery, state: FSMContext):
-    await state.update_data(object_name=message.text)
-    await message.answer(f'Объект "{message.text}" добавлен.\nСколько часов вы проработали? Пример: 2.4')
+@worker_router.callback_query(WorkerPickingCallbackFactory.filter())
+async def get_object(callback: CallbackQuery, state: FSMContext, callback_data: WorkerPickingCallbackFactory):
+    obj_name = get_obj_by_id(int(callback_data.obj_id))
+    await state.update_data(object_name=obj_name)
+    await callback.message.answer(f'Объект "{obj_name}" добавлен.\nСколько часов вы проработали? Пример: 2.4')
 
     await state.set_state(WorkerStates.add_work_hours)
 
