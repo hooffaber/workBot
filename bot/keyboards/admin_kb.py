@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bot.cbdata import AdminMenuCallbackFactory, AdminDelCallbackFactory, AdminExportFactory
 
-from bot.db.orm import get_users, get_objects
+from bot.db.orm import get_users, get_all_objects
 
 
 def make_admin_menu():
@@ -62,7 +62,7 @@ def delete_user_kb():
 def delete_obj_kb():
     builder = InlineKeyboardBuilder()
 
-    objects = get_objects()
+    objects = get_all_objects()
 
     for obj in objects:
         builder.button(text=obj, callback_data=AdminDelCallbackFactory(name=obj, subject='object'))

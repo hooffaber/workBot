@@ -13,7 +13,7 @@ from bot.cbdata import AdminMenuCallbackFactory, AdminDelCallbackFactory, AdminE
 from bot.states import AddUser, AddObject, DeleteObject, DeleteUser
 
 from bot.db.orm import add_user, delete_worker, export_query, add_object, delete_object
-from bot.db.export import export_data
+from bot.db.export import export_data_to_google_sheets
 
 config = load_config()
 
@@ -31,21 +31,26 @@ async def admin_action_cmd(callback: CallbackQuery, callback_data: AdminMenuCall
     action = callback_data.action
     subject = callback_data.subject
 
-    if action == 'add' and subject == 'worker':
-        await callback.message.edit_text("Введите @username работника", reply_markup=None)
-        await state.set_state(AddUser.add_tg_username)
+    if action == 'add':
+        if subject == 'worker':
+            await callback.message.edit_text("Введите @username работника", reply_markup=None)
+            await state.set_state(AddUser.add_tg_username)
 
-    elif action == 'remove' and subject == 'worker':
-        await callback.message.edit_text('Выберите работника для удаления', reply_markup=delete_user_kb())
+        elif subject == 'object':
+            await callback.message.edit_text("Введите название объекта для добавления", reply_markup=None)
+            await state.set_state(AddObject.add_object_name)
+        else:
+            raise RuntimeError("Не хватает subject в AdminMenuCallbackFactory")
 
-    elif action == 'add' and subject == 'object':
-        await callback.message.edit_text("Введите название объекта для добавления", reply_markup=None)
-        await state.set_state(AddObject.add_object_name)
+    elif action == 'remove':
+        if subject == 'worker':
+            await callback.message.edit_text('Выберите работника для удаления', reply_markup=delete_user_kb())
+        elif subject == 'object':
+            await callback.message.edit_text('Выберите объект для удаления', reply_markup=delete_obj_kb())
+        else:
+            raise RuntimeError("Не хватает subject в AdminMenuCallbackFactory")
 
-    elif action == 'remove' and subject == 'object':
-        await callback.message.edit_text('Выберите объект для удаления', reply_markup=delete_obj_kb())
-
-    elif action == 'export_data':
+    else:
         await callback.message.edit_text('Выберите формат отчёта', reply_markup=make_export_kb())
 
     await callback.answer()
@@ -54,11 +59,12 @@ async def admin_action_cmd(callback: CallbackQuery, callback_data: AdminMenuCall
 @admin_router.callback_query(AdminExportFactory.filter())
 async def get_export(callback: CallbackQuery, callback_data: AdminExportFactory):
     data = export_query(callback_data.date)
-    export_filename = export_data(query_data=data, export_time=callback_data.date)
+    export_link = export_data_to_google_sheets(query_data=data,
+                                               export_time=callback_data.date,
+                                               spreadsheet_name=str(callback_data.date),
+                                               worksheet_name=str(callback_data.date))
 
-    excel_file = FSInputFile(export_filename)
-
-    await callback.message.answer_document(excel_file)
+    await callback.message.answer(export_link)
 
     await callback.message.delete()
 

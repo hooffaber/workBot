@@ -27,7 +27,6 @@ class WorkerStates(StatesGroup):
     add_voice_msg = State()
 
     write_msg_byhands = State()
-
     wait_next_obj = State()
 
     finish_job = State()

@@ -13,3 +13,7 @@ class AdminDelCallbackFactory(CallbackData, prefix='delete'):
 
 class AdminExportFactory(CallbackData, prefix='export'):
     date: str
+
+
+class WorkerPickingCallbackFactory(CallbackData, prefix='worker_pick'):
+    obj_id: str
