@@ -53,3 +53,13 @@ class HoursFacility(Base):
 
     workHours_ref = relationship("WorkHours", backref="hoursfacility")
     facilityWork_ref = relationship("FacilityWork", backref="hoursfacility")
+
+
+class AdminObject(Base):
+    """
+    Таблица для хранения названий объектов, которые может добавлять админ
+    """
+    __tablename__ = 'Object'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=True)
+

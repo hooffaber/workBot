@@ -1,6 +1,10 @@
 from aiogram.types import KeyboardButton, InlineKeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
+from bot.cbdata import WorkerPickingCallbackFactory
+from bot.db.orm import get_all_objects
+from bot.db.models import AdminObject
+
 
 def make_worker_kb():
     builder = ReplyKeyboardBuilder()
@@ -47,3 +51,18 @@ def make_start_kb():
     )
 
     return builder.as_markup(resize_keyboard=True)
+
+
+def choose_obj_kb():
+    builder = InlineKeyboardBuilder()
+
+    objects: list[AdminObject] = get_all_objects(flag='full')
+
+    for obj in objects:
+        builder.button(text=obj.name, callback_data=WorkerPickingCallbackFactory(obj_id=str(obj.id)))
+
+    builder.button(text='Обновить список объектов', callback_data='refresh_objects')
+
+    builder.adjust(2)
+
+    return builder.as_markup()
