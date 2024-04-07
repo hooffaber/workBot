@@ -1,11 +1,15 @@
-from aiogram import Router, F
+import datetime
+
+from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from bot.location import get_location
+from bot.location import get_location, get_current_time, get_times
 
 from bot.keyboards.worker_kb import make_worker_kb, make_object_kb, make_submit_form_kb, make_start_kb, choose_obj_kb
 from bot.keyboards.voice_kb import instead_voice_kb
+from bot.send_worker_notification import send_notification
 from bot.states import WorkerStates
 
 from bot.db.orm import add_work_hour, update_finish_time, add_facility, update_finish_address, get_obj_by_id
@@ -26,7 +30,7 @@ async def start_cmd(callback: CallbackQuery, state: FSMContext):
 
 
 @worker_router.message(F.location, WorkerStates.finish_job)
-async def wait_finish_location(message: Message, state: FSMContext):
+async def wait_finish_location(message: Message, state: FSMContext, scheduler: AsyncIOScheduler, bot: Bot):
     await message.reply("Отлично. Идёт обработка гео.", reply_markup=ReplyKeyboardRemove())
 
     data = await state.get_data()
@@ -34,18 +38,31 @@ async def wait_finish_location(message: Message, state: FSMContext):
     location = get_location(long=message.location.longitude, lat=message.location.latitude)
     update_finish_address(db_entity_id, location)
 
+    start_time, finish_time = await get_times(lat=message.location.latitude,
+                                              long=message.location.longitude)
+    scheduler.add_job(send_notification,
+                      "date",
+                      run_date=start_time + datetime.timedelta(days=1),
+                      args=(bot, message.chat.id, True))
+
     await state.clear()
 
     await message.answer('Работа закончена.', reply_markup=make_start_kb())
 
 
 @worker_router.message(F.location, WorkerStates.add_geo)
-async def get_loc(message: Message, state: FSMContext):
+async def get_loc(message: Message, state: FSMContext, scheduler: AsyncIOScheduler, bot: Bot):
     await message.reply("Отлично. Идёт обработка гео.", reply_markup=ReplyKeyboardRemove())
 
-    # location = "Село Кукуево"
-
     location = get_location(long=message.location.longitude, lat=message.location.latitude)
+
+    start_time, finish_time = await get_times(lat=message.location.latitude,
+                                              long=message.location.longitude)
+
+    scheduler.add_job(send_notification,
+                      "date",
+                      run_date=finish_time,
+                      args=(bot, message.chat.id, False))
 
     db_entity_id: int = add_work_hour(tg_name=message.from_user.username, address=location)
 

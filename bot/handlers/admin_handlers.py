@@ -139,7 +139,6 @@ async def submit_user_add(callback: CallbackQuery, state: FSMContext):
 
     data = await state.get_data()
     obj_name = data['obj_name']
-    print(obj_name)
     add_object(obj_name=obj_name)
 
     await state.clear()
