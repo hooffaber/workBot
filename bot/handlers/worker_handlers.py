@@ -9,7 +9,7 @@ from bot.location import get_location, get_current_time, get_times
 
 from bot.keyboards.worker_kb import make_worker_kb, make_object_kb, make_submit_form_kb, make_start_kb, choose_obj_kb
 from bot.keyboards.voice_kb import instead_voice_kb
-from bot.send_worker_notification import send_notification
+from bot.send_worker_notification import send_notification, add_interval_notification
 from bot.states import WorkerStates
 
 from bot.db.orm import add_work_hour, update_finish_time, add_facility, update_finish_address, get_obj_by_id
@@ -40,10 +40,16 @@ async def wait_finish_location(message: Message, state: FSMContext, scheduler: A
 
     start_time, finish_time = await get_times(lat=message.location.latitude,
                                               long=message.location.longitude)
+    scheduler.remove_all_jobs()
     scheduler.add_job(send_notification,
                       "date",
                       run_date=start_time + datetime.timedelta(days=1),
                       args=(bot, message.chat.id, True))
+
+    scheduler.add_job(add_interval_notification,
+                      "date",
+                      run_date=start_time + datetime.timedelta(days=1),
+                      args=(scheduler, bot, message.chat.id, True))
 
     await state.clear()
 
@@ -52,17 +58,24 @@ async def wait_finish_location(message: Message, state: FSMContext, scheduler: A
 
 @worker_router.message(F.location, WorkerStates.add_geo)
 async def get_loc(message: Message, state: FSMContext, scheduler: AsyncIOScheduler, bot: Bot):
+
     await message.reply("Отлично. Идёт обработка гео.", reply_markup=ReplyKeyboardRemove())
 
     location = get_location(long=message.location.longitude, lat=message.location.latitude)
 
     start_time, finish_time = await get_times(lat=message.location.latitude,
                                               long=message.location.longitude)
+    scheduler.remove_all_jobs()
 
     scheduler.add_job(send_notification,
                       "date",
                       run_date=finish_time,
                       args=(bot, message.chat.id, False))
+
+    scheduler.add_job(add_interval_notification,
+                      "date",
+                      run_date=finish_time,
+                      args=(scheduler, bot, message.chat.id, False))
 
     db_entity_id: int = add_work_hour(tg_name=message.from_user.username, address=location)
 

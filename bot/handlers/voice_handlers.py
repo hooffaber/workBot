@@ -43,7 +43,6 @@ async def voice_message_handler(message: Message, bot: Bot, state: FSMContext):
     await bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
 
     text = speech_recognition(file_on_disk, model=model_mode)
-
     await state.get_data()
     await state.update_data(voice_text=text)
 
