@@ -12,11 +12,12 @@ async def send_notification(bot: Bot, chat_id: int, to_start: bool = True):
 
 
 async def add_interval_notification(scheduler: AsyncIOScheduler, bot: Bot, chat_id: int, to_start: bool = True):
-    scheduler.add_job(send_notification, 'interval', seconds=600, args=(bot, chat_id, to_start), tags=[str(chat_id)])
+    scheduler.add_job(send_notification, 'interval', seconds=600, args=(bot, chat_id, to_start), name=str(chat_id))
 
 
 async def remove_jobs_by_chat_id(scheduler, chat_id):
     jobs = scheduler.get_jobs()
+    print(jobs)
     for job in jobs:
-        if str(chat_id) in job.tags:
+        if job.name == chat_id:
             scheduler.remove_job(job.id)

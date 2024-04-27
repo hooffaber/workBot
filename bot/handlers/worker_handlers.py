@@ -41,18 +41,18 @@ async def wait_finish_location(message: Message, state: FSMContext, scheduler: A
     start_time, finish_time = await get_times(lat=message.location.latitude,
                                               long=message.location.longitude)
 
-    await remove_jobs_by_chat_id(scheduler, message.chat.id)
+    await remove_jobs_by_chat_id(scheduler, str(message.chat.id))
     scheduler.add_job(send_notification,
                       "date",
                       run_date=start_time + datetime.timedelta(days=1),
                       args=(bot, message.chat.id, True),
-                      tags=[str(message.chat.id)])
+                      name=str(message.chat.id))
 
     scheduler.add_job(add_interval_notification,
                       "date",
                       run_date=start_time + datetime.timedelta(days=1),
                       args=(scheduler, bot, message.chat.id, True),
-                      tags=[str(message.chat.id)])
+                      name=str(message.chat.id))
 
     await state.clear()
 
@@ -67,18 +67,20 @@ async def get_loc(message: Message, state: FSMContext, scheduler: AsyncIOSchedul
 
     start_time, finish_time = await get_times(lat=message.location.latitude,
                                               long=message.location.longitude)
-    await remove_jobs_by_chat_id(scheduler, message.chat.id)
+
+    await remove_jobs_by_chat_id(scheduler, str(message.chat.id))
+
     scheduler.add_job(send_notification,
                       "date",
                       run_date=finish_time,
                       args=(bot, message.chat.id, False),
-                      tags=[str(message.chat.id)])
+                      name=str(message.chat.id))
 
     scheduler.add_job(add_interval_notification,
                       "date",
                       run_date=finish_time,
                       args=(scheduler, bot, message.chat.id, False),
-                      tags=[str(message.chat.id)])
+                      name=str(message.chat.id))
 
     db_entity_id: int = add_work_hour(tg_name=message.from_user.username, address=location)
 
